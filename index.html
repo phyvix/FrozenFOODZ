@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Enjoy Frozen Food</title>
+<title>Enjoy Frozen Food — Bante Foodz</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -211,6 +211,27 @@ textarea { min-height:80px; resize:vertical; }
 /* WA LINK HINT */
 .wa-hint { background:var(--green-bg); border:1.5px solid #A3D9B1; border-radius:var(--radius-sm); padding:10px 14px; font-size:12px; color:var(--green); font-weight:600; margin-bottom:14px; display:flex; align-items:center; gap:8px; line-height:1.5; }
 
+/* VOUCHER */
+.voucher-card { background:white; border:1.5px solid var(--border); border-radius:var(--radius); padding:20px 24px; margin-bottom:16px; }
+.voucher-card h3 { font-size:1rem; font-weight:800; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+.voucher-input-row { display:flex; gap:8px; }
+.voucher-input-row input { flex:1; margin-bottom:0; text-transform:uppercase; letter-spacing:1px; font-weight:700; font-size:13px; }
+.voucher-apply-btn {
+  flex-shrink:0; padding:14px 20px; border-radius:var(--radius-sm); border:none;
+  background:var(--orange); color:white; font-family:'Poppins',sans-serif;
+  font-size:13px; font-weight:800; cursor:pointer; transition:all 0.2s;
+  white-space:nowrap;
+}
+.voucher-apply-btn:hover { background:var(--orange-dark); transform:translateY(-1px); }
+.voucher-apply-btn:disabled { background:#E0D0C8; color:#B0A098; cursor:not-allowed; transform:none; }
+.voucher-status { margin-top:10px; display:none; }
+.voucher-status.success { display:flex; align-items:center; gap:8px; background:var(--green-bg); border:1.5px solid #A3D9B1; border-radius:12px; padding:10px 14px; font-size:13px; font-weight:700; color:var(--green); }
+.voucher-status.error { display:flex; align-items:center; gap:8px; background:var(--red-bg); border:1.5px solid #F5B8B0; border-radius:12px; padding:10px 14px; font-size:13px; font-weight:700; color:var(--red); }
+.voucher-remove { margin-left:auto; cursor:pointer; font-size:16px; opacity:0.6; }
+.voucher-remove:hover { opacity:1; }
+.voucher-discount-row { display:flex; justify-content:space-between; align-items:center; font-size:13px; color:var(--green); font-weight:700; padding:6px 0; border-top:1px dashed #C8E8D4; margin-top:6px; }
+.total-final-row { display:flex; justify-content:space-between; align-items:center; font-size:1.1rem; font-weight:900; color:var(--orange); padding-top:8px; }
+
 /* DIVIDER */
 .divider { height:1px; background:var(--border); margin:20px 0; }
 
@@ -299,7 +320,7 @@ textarea { min-height:80px; resize:vertical; }
     <div class="hero">
       <div class="hero-tag">❄️ EnjoyGrill Frozen Food</div>
       <h1>Belanja Bahan<br>Frozen Terlengkap</h1>
-      <p>Kualitas premium, harga bersaing.</p>
+      <p>Kualitas premium, harga bersaing. Langsung dari Bante Foodz Jakarta Selatan.</p>
       <div class="hero-badges">
         <div class="hero-badge">🥩 Meats</div>
         <div class="hero-badge">🍗 Chicken & Seafood</div>
@@ -498,9 +519,27 @@ textarea { min-height:80px; resize:vertical; }
       <div class="order-summary-items" id="checkoutSummary"></div>
       <div class="divider" style="margin:10px 0;"></div>
       <div style="display:flex;justify-content:space-between;align-items:center;">
-        <span style="font-size:14px;font-weight:700;">Total</span>
+        <span style="font-size:14px;font-weight:700;">Subtotal</span>
         <span style="font-size:1.1rem;font-weight:900;color:var(--orange);" id="checkoutTotal">Rp 0</span>
       </div>
+      <div class="voucher-discount-row" id="discountRow" style="display:none;">
+        <span>🎟️ Diskon Voucher</span>
+        <span id="discountAmount">- Rp 0</span>
+      </div>
+      <div class="total-final-row" id="finalTotalRow" style="display:none;">
+        <span>Total Bayar</span>
+        <span id="checkoutFinalTotal">Rp 0</span>
+      </div>
+    </div>
+
+    <!-- Voucher -->
+    <div class="voucher-card">
+      <h3>🎟️ Kode Voucher</h3>
+      <div class="voucher-input-row">
+        <input type="text" id="voucherInput" placeholder="Masukkan kode voucher..." oninput="this.value=this.value.toUpperCase()">
+        <button class="voucher-apply-btn" onclick="applyVoucher()">Pakai</button>
+      </div>
+      <div class="voucher-status" id="voucherStatus"></div>
     </div>
 
     <!-- Customer data -->
@@ -922,7 +961,12 @@ function goCheckout() {
     row.innerHTML = `<span>${p.emoji} ${p.name} (${p.vol}) ×${qty}</span><span style="font-weight:700">${formatRp(qty*p.price)}</span>`;
     summaryEl.appendChild(row);
   });
-  document.getElementById('checkoutTotal').textContent = formatRp(getCartTotal());
+  // Reset voucher state
+  appliedVoucher = null;
+  document.getElementById('voucherInput').value = '';
+  document.getElementById('voucherStatus').className = 'voucher-status';
+  document.getElementById('voucherStatus').style.display = 'none';
+  updateCheckoutTotals();
   showPage('pageCheckout');
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -931,6 +975,78 @@ function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ─── VOUCHER ─────────────────────────────────────────────────
+const VOUCHERS = [
+  { code:'FROZEN10', type:'persen', value:10, min:100000, quota:50, desc:'Diskon 10% pelanggan baru' },
+  { code:'GRILLBOSS', type:'nominal', value:20000, min:200000, quota:30, desc:'Potongan Rp 20.000' },
+];
+
+let appliedVoucher = null;
+
+function applyVoucher() {
+  const code = document.getElementById('voucherInput').value.trim().toUpperCase();
+  const statusEl = document.getElementById('voucherStatus');
+  const total = getCartTotal();
+
+  if (!code) { showVoucherStatus('error', '⚠️ Masukkan kode voucher terlebih dahulu.'); return; }
+
+  const voucher = VOUCHERS.find(v => v.code === code);
+  if (!voucher) { showVoucherStatus('error', '❌ Kode voucher tidak ditemukan.'); return; }
+  if (total < voucher.min) {
+    showVoucherStatus('error', `⚠️ Minimum belanja ${formatRp(voucher.min)} untuk pakai voucher ini.`);
+    return;
+  }
+
+  appliedVoucher = voucher;
+  const disc = getDiscount();
+  showVoucherStatus('success', `✅ ${voucher.desc} — hemat ${formatRp(disc)}! <span class="voucher-remove" onclick="removeVoucher()">✕</span>`);
+  updateCheckoutTotals();
+  showToast('🎟️ Voucher berhasil dipakai!');
+}
+
+function removeVoucher() {
+  appliedVoucher = null;
+  document.getElementById('voucherInput').value = '';
+  document.getElementById('voucherStatus').className = 'voucher-status';
+  document.getElementById('voucherStatus').style.display = 'none';
+  updateCheckoutTotals();
+  showToast('🗑️ Voucher dihapus');
+}
+
+function showVoucherStatus(type, msg) {
+  const el = document.getElementById('voucherStatus');
+  el.className = 'voucher-status ' + type;
+  el.style.display = 'flex';
+  el.innerHTML = msg;
+}
+
+function getDiscount() {
+  if (!appliedVoucher) return 0;
+  const total = getCartTotal();
+  if (appliedVoucher.type === 'persen') return Math.round(total * appliedVoucher.value / 100);
+  return appliedVoucher.value;
+}
+
+function getFinalTotal() {
+  return Math.max(0, getCartTotal() - getDiscount());
+}
+
+function updateCheckoutTotals() {
+  const disc = getDiscount();
+  const discRow = document.getElementById('discountRow');
+  const finalRow = document.getElementById('finalTotalRow');
+  document.getElementById('checkoutTotal').textContent = formatRp(getCartTotal());
+  if (disc > 0) {
+    document.getElementById('discountAmount').textContent = '- ' + formatRp(disc);
+    document.getElementById('checkoutFinalTotal').textContent = formatRp(getFinalTotal());
+    discRow.style.display = 'flex';
+    finalRow.style.display = 'flex';
+  } else {
+    discRow.style.display = 'none';
+    finalRow.style.display = 'none';
+  }
 }
 
 function sendOrder() {
@@ -958,7 +1074,12 @@ function sendOrder() {
     lines.push(`- ${p.name} (${p.vol}) ×${qty} = ${formatRp(qty * p.price)}`);
   });
   lines.push(SEP);
-  lines.push('*TOTAL: ' + formatRp(getCartTotal()) + '*');
+  lines.push('Subtotal : ' + formatRp(getCartTotal()));
+  if (appliedVoucher) {
+    lines.push('Voucher  : ' + appliedVoucher.code + ' (' + appliedVoucher.desc + ')');
+    lines.push('Diskon   : - ' + formatRp(getDiscount()));
+  }
+  lines.push('*TOTAL BAYAR: ' + formatRp(getFinalTotal()) + '*');
   if (note) { lines.push(''); lines.push('Catatan: ' + note); }
   lines.push(SEP);
   lines.push('Terima kasih! Mohon konfirmasi pesanan kami.');
