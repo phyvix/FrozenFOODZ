@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Enjoy Frozen Food</title>
+<title>Enjoy Frozen Food — Bante Foodz</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -321,7 +321,7 @@ textarea { min-height:80px; resize:vertical; }
     <div class="hero">
       <div class="hero-tag">❄️ EnjoyGrill Frozen Food</div>
       <h1>Belanja Bahan<br>Frozen Terlengkap</h1>
-      <p>Kualitas premium, harga bersaing.</p>
+      <p>Kualitas premium, harga bersaing. Langsung dari Bante Foodz Jakarta Selatan.</p>
       <div class="hero-badges">
         <div class="hero-badge">🥩 Meats</div>
         <div class="hero-badge">🍗 Chicken & Seafood</div>
@@ -987,14 +987,36 @@ let appliedVoucher = null;
 let cachedVouchers = null; // cache agar tidak fetch berulang
 
 function callAPI(params) {
+  // Pakai no-cors mode + jsonp trick agar bisa lintas domain dari GitHub Pages
   const url = APPS_SCRIPT_URL + '?' + new URLSearchParams(params).toString();
-  return fetch(url, { redirect: 'follow' }).then(r => r.json());
+  return fetch(url, { method:'GET', mode:'no-cors', redirect:'follow' })
+    .then(() => ({ success: true }))
+    .catch(() => ({ success: false }));
+}
+
+function callAPIRead(params) {
+  // Untuk baca data (getVouchers) pakai jsonp via script tag
+  return new Promise((resolve) => {
+    const cbName = '_cb' + Date.now();
+    const url = APPS_SCRIPT_URL + '?' + new URLSearchParams({ ...params, callback: cbName }).toString();
+    window[cbName] = (data) => {
+      resolve(data);
+      delete window[cbName];
+      document.getElementById('_jsonp_script') && document.getElementById('_jsonp_script').remove();
+    };
+    const s = document.createElement('script');
+    s.id = '_jsonp_script';
+    s.src = url;
+    s.onerror = () => resolve({ vouchers: [] });
+    document.head.appendChild(s);
+    setTimeout(() => resolve({ vouchers: [] }), 5000); // timeout 5 detik
+  });
 }
 
 async function loadVouchers() {
   if (cachedVouchers) return cachedVouchers;
   try {
-    const data = await callAPI({ action: 'getVouchers' });
+    const data = await callAPIRead({ action: 'getVouchers' });
     cachedVouchers = data.vouchers || [];
     return cachedVouchers;
   } catch(e) {
