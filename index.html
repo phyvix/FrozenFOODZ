@@ -986,14 +986,19 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzzDD5FZebacbsJ
 let appliedVoucher = null;
 let cachedVouchers = null; // cache agar tidak fetch berulang
 
+function callAPI(params) {
+  const url = APPS_SCRIPT_URL + '?' + new URLSearchParams(params).toString();
+  return fetch(url, { redirect: 'follow' }).then(r => r.json());
+}
+
 async function loadVouchers() {
   if (cachedVouchers) return cachedVouchers;
   try {
-    const res = await fetch(`${APPS_SCRIPT_URL}?action=getVouchers`);
-    const data = await res.json();
+    const data = await callAPI({ action: 'getVouchers' });
     cachedVouchers = data.vouchers || [];
     return cachedVouchers;
   } catch(e) {
+    console.error('Gagal load voucher:', e);
     return [];
   }
 }
@@ -1123,19 +1128,13 @@ function sendOrder() {
     note
   };
 
-  fetch(APPS_SCRIPT_URL, {
-    method: 'POST',
-    body: JSON.stringify(orderData)
-  }).then(() => {
-    // Update used voucher di Sheets
+  // Kirim ke Google Sheets via GET
+  callAPI(orderData).then(() => {
     if (appliedVoucher) {
-      fetch(APPS_SCRIPT_URL, {
-        method: 'POST',
-        body: JSON.stringify({ action: 'useVoucher', code: appliedVoucher.code })
-      });
-      cachedVouchers = null; // reset cache
+      callAPI({ action: 'useVoucher', code: appliedVoucher.code });
+      cachedVouchers = null;
     }
-  }).catch(() => {});
+  }).catch(e => console.error('Gagal simpan order:', e));
 
   setTimeout(() => {
     window.open('https://wa.me/6285771276910?text=' + encodeURIComponent(lines.join('\n')), '_blank');
