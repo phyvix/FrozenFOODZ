@@ -1066,11 +1066,9 @@ function addVoucher(){
   state.vouchers.push(newV);
   saveState();
 
-  // Sync ke Google Sheets
-  fetch(APPS_SCRIPT_URL, {
-    method:'POST',
-    body: JSON.stringify({ action:'addVoucher', voucher: newV })
-  }).catch(()=>{});
+  // Sync ke Google Sheets via GET
+  const params = { action:'addVoucher', code:newV.code, type:newV.type, value:newV.value, min:newV.min, quota:newV.quota, desc:newV.desc };
+  fetch(APPS_SCRIPT_URL + '?' + new URLSearchParams(params).toString(), { redirect:'follow' }).catch(()=>{});
 
   closeModal('modalVoucher'); renderVouchers();
   showToast('🎟️ Voucher '+code+' dibuat!');
@@ -1080,11 +1078,8 @@ function removeVoucher(id){
   state.vouchers=state.vouchers.filter(v=>v.id!==id);
   saveState();
 
-  // Sync ke Google Sheets
-  if(v) fetch(APPS_SCRIPT_URL, {
-    method:'POST',
-    body: JSON.stringify({ action:'removeVoucher', code: v.code })
-  }).catch(()=>{});
+  // Sync ke Google Sheets via GET
+  if(v) fetch(APPS_SCRIPT_URL + '?' + new URLSearchParams({ action:'removeVoucher', code:v.code }).toString(), { redirect:'follow' }).catch(()=>{});
 
   renderVouchers(); showToast('🗑️ Voucher dihapus');
 }
