@@ -739,6 +739,13 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:20px; h
 // ── CONFIG GOOGLE SHEETS ──────────────────────────────────────
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzzDD5FZebacbsJpezqn7f2Gc1ncaiZ40AL0gFTohaSjkK4Bd4f_omTRI4hvL34jzr7/exec';
 
+function callAPI(params) {
+  const url = APPS_SCRIPT_URL + '?' + new URLSearchParams(params).toString();
+  return fetch(url, { method:'GET', mode:'no-cors', redirect:'follow' })
+    .then(() => ({ success: true }))
+    .catch(() => ({ success: false }));
+}
+
 // ── STATE ─────────────────────────────────────────────────────
 const PASSWORD = 'enjoygrill2025';
 
@@ -1067,8 +1074,7 @@ function addVoucher(){
   saveState();
 
   // Sync ke Google Sheets via GET
-  const params = { action:'addVoucher', code:newV.code, type:newV.type, value:newV.value, min:newV.min, quota:newV.quota, desc:newV.desc };
-  fetch(APPS_SCRIPT_URL + '?' + new URLSearchParams(params).toString(), { redirect:'follow' }).catch(()=>{});
+  callAPI({ action:'addVoucher', code:newV.code, type:newV.type, value:newV.value, min:newV.min, quota:newV.quota, desc:newV.desc });
 
   closeModal('modalVoucher'); renderVouchers();
   showToast('🎟️ Voucher '+code+' dibuat!');
@@ -1079,7 +1085,7 @@ function removeVoucher(id){
   saveState();
 
   // Sync ke Google Sheets via GET
-  if(v) fetch(APPS_SCRIPT_URL + '?' + new URLSearchParams({ action:'removeVoucher', code:v.code }).toString(), { redirect:'follow' }).catch(()=>{});
+  if(v) callAPI({ action:'removeVoucher', code:v.code });
 
   renderVouchers(); showToast('🗑️ Voucher dihapus');
 }
