@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EnjoyGrill — Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0F0F13;
+  --bg2: #16161D;
+  --bg3: #1E1E28;
+  --bg4: #26263399;
+  --border: rgba(255,255,255,0.07);
+  --orange: #FF6B35;
+  --orange2: #FF8C5A;
+  --orange-glow: rgba(255,107,53,0.15);
+  --green: #22C55E;
+  --green-bg: rgba(34,197,94,0.12);
+  --red: #EF4444;
+  --red-bg: rgba(239,68,68,0.12);
+  --blue: #3B82F6;
+  --blue-bg: rgba(59,130,246,0.12);
+  --yellow: #F59E0B;
+  --yellow-bg: rgba(245,158,11,0.12);
+  --purple: #A855F7;
+  --purple-bg: rgba(168,85,247,0.12);
+  --text: #F0F0F5;
+  --text2: #9090A8;
+  --text3: #6060758;
+  --r: 14px;
+  --rs: 10px;
+  --sidebar-w: 220px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
+
+/* ── LOGIN ── */
+#loginScreen {
+  position:fixed; inset:0; z-index:999;
+  background:var(--bg);
+  display:flex; align-items:center; justify-content:center;
+}
+.login-card {
+  background:var(--bg2); border:1px solid var(--border);
+  border-radius:24px; padding:48px 40px; width:min(420px,90vw);
+  position:relative; overflow:hidden;
+}
+.login-card::before {
+  content:''; position:absolute; top:-60px; right:-60px;
+  width:200px; height:200px; border-radius:50%;
+  background:radial-gradient(circle, var(--orange-glow) 0%, transparent 70%);
+  pointer-events:none;
+}
+.login-logo { display:flex; align-items:center; gap:12px; margin-bottom:32px; }
+.login-logo-icon { width:48px; height:48px; border-radius:12px; background:linear-gradient(135deg,var(--orange),#C84B20); display:flex; align-items:center; justify-content:center; font-size:24px; }
+.login-logo-text { font-size:18px; font-weight:900; }
+.login-logo-sub { font-size:11px; color:var(--text2); font-weight:500; }
+.login-title { font-size:1.5rem; font-weight:800; margin-bottom:6px; }
+.login-sub { font-size:13px; color:var(--text2); margin-bottom:28px; }
+.login-label { font-size:12px; font-weight:700; color:var(--text2); margin-bottom:8px; letter-spacing:0.5px; text-transform:uppercase; display:block; }
+.login-input {
+  width:100%; padding:14px 16px; background:var(--bg3);
+  border:1.5px solid var(--border); border-radius:var(--rs);
+  font-family:'Plus Jakarta Sans',sans-serif; font-size:14px; color:var(--text);
+  outline:none; transition:border-color 0.2s; margin-bottom:20px;
+}
+.login-input:focus { border-color:var(--orange); }
+.login-btn {
+  width:100%; padding:14px; border-radius:var(--rs); border:none;
+  background:linear-gradient(135deg,var(--orange),#C84B20);
+  font-family:'Plus Jakarta Sans',sans-serif; font-size:15px; font-weight:800;
+  color:white; cursor:pointer; transition:all 0.2s;
+  box-shadow:0 8px 24px rgba(255,107,53,0.3);
+}
+.login-btn:hover { transform:translateY(-1px); box-shadow:0 12px 32px rgba(255,107,53,0.4); }
+.login-err { color:var(--red); font-size:12px; font-weight:600; margin-top:-12px; margin-bottom:16px; display:none; }
+
+/* ── LAYOUT ── */
+#app { display:none; min-height:100vh; }
+.sidebar {
+  position:fixed; left:0; top:0; bottom:0; width:var(--sidebar-w);
+  background:var(--bg2); border-right:1px solid var(--border);
+  display:flex; flex-direction:column; z-index:50;
+  padding:20px 0;
+}
+.sidebar-logo { display:flex; align-items:center; gap:10px; padding:0 20px 24px; border-bottom:1px solid var(--border); margin-bottom:12px; }
+.sidebar-logo-icon { width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg,var(--orange),#C84B20); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.sidebar-logo-name { font-size:14px; font-weight:800; }
+.sidebar-logo-tag { font-size:9px; color:var(--orange); font-weight:700; letter-spacing:1px; text-transform:uppercase; }
+.nav-group { padding:0 12px; margin-bottom:4px; }
+.nav-group-label { font-size:9px; font-weight:700; color:var(--text2); letter-spacing:1.5px; text-transform:uppercase; padding:8px 8px 6px; }
+.nav-item {
+  display:flex; align-items:center; gap:10px; padding:9px 10px;
+  border-radius:var(--rs); cursor:pointer; transition:all 0.15s;
+  font-size:13px; font-weight:600; color:var(--text2);
+  margin-bottom:2px;
+}
+.nav-item:hover { background:var(--bg3); color:var(--text); }
+.nav-item.active { background:var(--orange-glow); color:var(--orange); border:1px solid rgba(255,107,53,0.2); }
+.nav-item-icon { font-size:16px; width:20px; text-align:center; }
+.sidebar-bottom { margin-top:auto; padding:12px; border-top:1px solid var(--border); }
+.logout-btn { display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:var(--rs); cursor:pointer; font-size:13px; font-weight:600; color:var(--red); transition:background 0.15s; }
+.logout-btn:hover { background:var(--red-bg); }
+
+.main { margin-left:var(--sidebar-w); min-height:100vh; }
+.topbar {
+  background:var(--bg2); border-bottom:1px solid var(--border);
+  padding:16px 28px; display:flex; align-items:center; justify-content:space-between;
+  position:sticky; top:0; z-index:40;
+}
+.topbar-title { font-size:1rem; font-weight:800; }
+.topbar-sub { font-size:12px; color:var(--text2); margin-top:1px; }
+.topbar-right { display:flex; align-items:center; gap:10px; }
+.topbar-date { font-size:12px; color:var(--text2); font-family:'JetBrains Mono',monospace; }
+.badge { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:100px; font-size:11px; font-weight:700; }
+.badge-green { background:var(--green-bg); color:var(--green); }
+.badge-orange { background:var(--orange-glow); color:var(--orange); }
+.badge-red { background:var(--red-bg); color:var(--red); }
+.badge-blue { background:var(--blue-bg); color:var(--blue); }
+.badge-yellow { background:var(--yellow-bg); color:var(--yellow); }
+.badge-purple { background:var(--purple-bg); color:var(--purple); }
+
+.content { padding:24px 28px; }
+
+/* ── PAGES ── */
+.page { display:none; }
+.page.active { display:block; }
+
+/* ── STAT CARDS ── */
+.stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
+@media(max-width:900px){ .stats-grid { grid-template-columns:repeat(2,1fr); } }
+.stat-card {
+  background:var(--bg2); border:1px solid var(--border); border-radius:var(--r);
+  padding:20px; position:relative; overflow:hidden; transition:border-color 0.2s;
+}
+.stat-card:hover { border-color:rgba(255,255,255,0.12); }
+.stat-card::after { content:''; position:absolute; inset:0; opacity:0; background:linear-gradient(135deg, var(--c, var(--orange-glow)), transparent); transition:opacity 0.3s; }
+.stat-card:hover::after { opacity:1; }
+.stat-icon { font-size:1.5rem; margin-bottom:12px; }
+.stat-label { font-size:11px; font-weight:700; color:var(--text2); letter-spacing:0.5px; text-transform:uppercase; margin-bottom:6px; }
+.stat-val { font-size:1.5rem; font-weight:900; letter-spacing:-0.5px; }
+.stat-change { font-size:11px; font-weight:700; margin-top:6px; }
+.stat-change.up { color:var(--green); }
+.stat-change.down { color:var(--red); }
+
+/* ── SECTION HEADER ── */
+.sec-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.sec-title { font-size:15px; font-weight:800; }
+.sec-sub { font-size:12px; color:var(--text2); margin-top:2px; }
+
+/* ── BUTTONS ── */
+.btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border-radius:var(--rs); border:none; font-family:'Plus Jakarta Sans',sans-serif; font-size:13px; font-weight:700; cursor:pointer; transition:all 0.15s; }
+.btn-primary { background:var(--orange); color:white; }
+.btn-primary:hover { background:#E85520; }
+.btn-ghost { background:var(--bg3); color:var(--text2); border:1px solid var(--border); }
+.btn-ghost:hover { color:var(--text); border-color:rgba(255,255,255,0.15); }
+.btn-danger { background:var(--red-bg); color:var(--red); border:1px solid rgba(239,68,68,0.2); }
+.btn-danger:hover { background:rgba(239,68,68,0.2); }
+.btn-success { background:var(--green-bg); color:var(--green); border:1px solid rgba(34,197,94,0.2); }
+.btn-success:hover { background:rgba(34,197,94,0.2); }
+.btn-sm { padding:6px 12px; font-size:12px; }
+
+/* ── TABLE ── */
+.table-wrap { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; }
+table { width:100%; border-collapse:collapse; }
+th { font-size:11px; font-weight:700; color:var(--text2); letter-spacing:0.5px; text-transform:uppercase; padding:12px 16px; background:var(--bg3); text-align:left; border-bottom:1px solid var(--border); }
+td { padding:12px 16px; font-size:13px; border-bottom:1px solid var(--border); vertical-align:middle; }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:rgba(255,255,255,0.02); }
+.mono { font-family:'JetBrains Mono',monospace; font-size:12px; }
+
+/* ── FORM ELEMENTS ── */
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+.form-group { display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+.form-label { font-size:11px; font-weight:700; color:var(--text2); letter-spacing:0.5px; text-transform:uppercase; }
+.form-input, .form-select, .form-textarea {
+  padding:11px 14px; background:var(--bg3); border:1.5px solid var(--border);
+  border-radius:var(--rs); font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:13px; color:var(--text); outline:none; transition:border-color 0.2s;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color:var(--orange); }
+.form-select { cursor:pointer; }
+.form-select option { background:var(--bg2); }
+.form-textarea { min-height:80px; resize:vertical; }
+
+/* ── CARD ── */
+.card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r); padding:20px; margin-bottom:16px; }
+.card-title { font-size:14px; font-weight:800; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+
+/* ── MODAL ── */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:500; backdrop-filter:blur(4px); align-items:center; justify-content:center; }
+.modal-overlay.show { display:flex; }
+.modal { background:var(--bg2); border:1px solid var(--border); border-radius:20px; padding:28px; width:min(500px,90vw); max-height:90vh; overflow-y:auto; }
+.modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+.modal-title { font-size:1rem; font-weight:800; }
+.modal-close { width:32px; height:32px; border-radius:50%; background:var(--bg3); border:1px solid var(--border); cursor:pointer; font-size:16px; color:var(--text2); display:flex; align-items:center; justify-content:center; transition:all 0.15s; }
+.modal-close:hover { color:var(--text); }
+
+/* ── TOAST ── */
+.toast { position:fixed; bottom:24px; right:24px; z-index:999; background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:14px 18px; font-size:13px; font-weight:600; display:flex; align-items:center; gap:10px; box-shadow:0 16px 40px rgba(0,0,0,0.4); transform:translateY(80px); opacity:0; transition:all 0.4s cubic-bezier(0.34,1.56,0.64,1); pointer-events:none; }
+.toast.show { transform:translateY(0); opacity:1; }
+
+/* ── TABS ── */
+.tab-bar { display:flex; gap:4px; background:var(--bg3); border-radius:var(--rs); padding:4px; margin-bottom:20px; width:fit-content; }
+.tab { padding:7px 16px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; transition:all 0.15s; color:var(--text2); }
+.tab.active { background:var(--bg2); color:var(--text); box-shadow:0 2px 8px rgba(0,0,0,0.3); }
+
+/* ── CHART ── */
+.chart-wrap { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r); padding:20px; margin-bottom:16px; }
+.chart-bar-row { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+.chart-bar-label { font-size:12px; font-weight:600; width:120px; color:var(--text2); flex-shrink:0; }
+.chart-bar-track { flex:1; background:var(--bg3); border-radius:100px; height:8px; overflow:hidden; }
+.chart-bar-fill { height:100%; border-radius:100px; transition:width 1s cubic-bezier(0.34,1.1,0.64,1); }
+.chart-bar-val { font-size:12px; font-weight:700; font-family:'JetBrains Mono',monospace; width:80px; text-align:right; flex-shrink:0; }
+
+/* ── VOUCHER CARD ── */
+.voucher-card { background:var(--bg3); border:1px dashed rgba(255,107,53,0.3); border-radius:var(--r); padding:16px 20px; display:flex; align-items:center; gap:16px; margin-bottom:10px; transition:border-color 0.2s; }
+.voucher-card:hover { border-color:var(--orange); }
+.voucher-code { font-family:'JetBrains Mono',monospace; font-size:16px; font-weight:700; color:var(--orange); letter-spacing:1px; }
+.voucher-info { flex:1; }
+.voucher-desc { font-size:12px; color:var(--text2); margin-top:2px; }
+.voucher-val { font-size:13px; font-weight:800; color:var(--green); }
+
+/* ── BANNER CARD ── */
+.banner-card { background:var(--bg3); border:1px solid var(--border); border-radius:var(--r); padding:16px; margin-bottom:10px; display:flex; align-items:center; gap:16px; }
+.banner-preview { width:80px; height:48px; border-radius:8px; background:linear-gradient(135deg,var(--orange),#C84B20); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+.banner-info { flex:1; }
+.banner-title-text { font-size:13px; font-weight:700; }
+.banner-sub-text { font-size:11px; color:var(--text2); margin-top:2px; }
+
+/* ── ORDER CARD ── */
+.order-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r); padding:16px; margin-bottom:10px; transition:border-color 0.2s; cursor:pointer; }
+.order-card:hover { border-color:rgba(255,255,255,0.12); }
+.order-card-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.order-id { font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:600; color:var(--text2); }
+.order-name { font-size:14px; font-weight:700; }
+.order-items { font-size:12px; color:var(--text2); margin-top:2px; }
+.order-total { font-size:15px; font-weight:900; color:var(--orange); }
+
+/* ── PRODUCT TERLARIS PILL ── */
+.bs-item { display:flex; align-items:center; gap:12px; background:var(--bg3); border-radius:var(--rs); padding:12px 14px; margin-bottom:8px; border:1px solid var(--border); transition:border-color 0.2s; }
+.bs-item:hover { border-color:rgba(255,255,255,0.12); }
+.bs-item-emoji { font-size:1.4rem; flex-shrink:0; }
+.bs-item-info { flex:1; }
+.bs-item-name { font-size:13px; font-weight:700; }
+.bs-item-vol { font-size:11px; color:var(--text2); margin-top:1px; }
+.bs-item-price { font-size:13px; font-weight:800; color:var(--orange); font-family:'JetBrains Mono',monospace; flex-shrink:0; }
+.drag-handle { color:var(--text2); cursor:grab; font-size:16px; flex-shrink:0; }
+
+/* ── MARKUP SLIDER ── */
+.slider-wrap { margin-bottom:20px; }
+input[type=range] { -webkit-appearance:none; width:100%; height:6px; border-radius:100px; background:var(--bg3); outline:none; cursor:pointer; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:20px; height:20px; border-radius:50%; background:var(--orange); cursor:pointer; box-shadow:0 2px 8px rgba(255,107,53,0.4); }
+.markup-display { font-size:2rem; font-weight:900; color:var(--orange); font-family:'JetBrains Mono',monospace; }
+.markup-sub { font-size:12px; color:var(--text2); margin-top:4px; }
+
+/* ── EXPENSE ── */
+.expense-cat { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border); }
+.expense-cat:last-child { border:none; }
+.expense-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.expense-cat-name { font-size:13px; font-weight:600; flex:1; }
+.expense-cat-val { font-size:13px; font-weight:800; font-family:'JetBrains Mono',monospace; }
+
+/* ── DIVIDER ── */
+.divider { height:1px; background:var(--border); margin:16px 0; }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width:6px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:3px; }
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .sidebar { transform:translateX(-100%); }
+  .main { margin-left:0; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">🔥</div>
+      <div>
+        <div class="login-logo-name">EnjoyGrill</div>
+        <div class="login-logo-sub">Admin Dashboard</div>
+      </div>
+    </div>
+    <div class="login-title">Selamat datang 👋</div>
+    <div class="login-sub">Masuk ke panel admin untuk kelola toko kamu.</div>
+    <label class="login-label">Password</label>
+    <input type="password" class="login-input" id="pwInput" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="login-err" id="loginErr">❌ Password salah. Coba lagi.</div>
+    <button class="login-btn" onclick="doLogin()">Masuk ke Dashboard →</button>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">🔥</div>
+      <div>
+        <div class="sidebar-logo-name">EnjoyGrill</div>
+        <div class="sidebar-logo-tag">Admin Panel</div>
+      </div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">Overview</div>
+      <div class="nav-item active" onclick="goPage('dashboard',this)">
+        <span class="nav-item-icon">📊</span> Dashboard
+      </div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">Marketing</div>
+      <div class="nav-item" onclick="goPage('bestseller',this)">
+        <span class="nav-item-icon">🔥</span> Produk Terlaris
+      </div>
+      <div class="nav-item" onclick="goPage('banner',this)">
+        <span class="nav-item-icon">🖼️</span> Banner & Promo
+      </div>
+      <div class="nav-item" onclick="goPage('markup',this)">
+        <span class="nav-item-icon">💹</span> Harga & Markup
+      </div>
+      <div class="nav-item" onclick="goPage('voucher',this)">
+        <span class="nav-item-icon">🎟️</span> Voucher
+      </div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">Finance</div>
+      <div class="nav-item" onclick="goPage('orders',this)">
+        <span class="nav-item-icon">🧾</span> Rekap Pesanan
+      </div>
+      <div class="nav-item" onclick="goPage('laporan',this)">
+        <span class="nav-item-icon">📈</span> Laporan
+      </div>
+      <div class="nav-item" onclick="goPage('pengeluaran',this)">
+        <span class="nav-item-icon">💸</span> Pengeluaran
+      </div>
+    </div>
+
+    <div class="sidebar-bottom">
+      <a href="index.html" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;text-decoration:none;font-size:13px;font-weight:600;color:var(--text2);margin-bottom:4px;transition:background 0.15s;" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='transparent'">
+        <span>🛍️</span> Lihat Toko
+      </a>
+      <div class="logout-btn" onclick="doLogout()">
+        <span>🚪</span> Keluar
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" id="topbarTitle">Dashboard</div>
+        <div class="topbar-sub" id="topbarSub">Ringkasan bisnis hari ini</div>
+      </div>
+      <div class="topbar-right">
+        <span class="topbar-date" id="topbarDate"></span>
+        <span class="badge badge-green">● Online</span>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ── DASHBOARD ── -->
+      <div class="page active" id="pageDashboard">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">💰</div>
+            <div class="stat-label">Pendapatan Hari Ini</div>
+            <div class="stat-val" id="statRevDay">Rp 0</div>
+            <div class="stat-change up" id="statRevDayChange">↑ 0% vs kemarin</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🧾</div>
+            <div class="stat-label">Pesanan Masuk</div>
+            <div class="stat-val" id="statOrders">0</div>
+            <div class="stat-change up" id="statOrdersChange">↑ 0 pesanan baru</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📦</div>
+            <div class="stat-label">Pendapatan Bulan Ini</div>
+            <div class="stat-val" id="statRevMonth">Rp 0</div>
+            <div class="stat-change up">↑ Berjalan</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📉</div>
+            <div class="stat-label">Total Pengeluaran</div>
+            <div class="stat-val" id="statExpense">Rp 0</div>
+            <div class="stat-change down" id="statExpenseChange">Bulan ini</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="chart-wrap">
+            <div class="sec-header" style="margin-bottom:16px;">
+              <div><div class="sec-title">Pendapatan 7 Hari</div><div class="sec-sub">Performa mingguan</div></div>
+            </div>
+            <div id="weeklyChart"></div>
+          </div>
+          <div class="chart-wrap">
+            <div class="sec-header" style="margin-bottom:16px;">
+              <div><div class="sec-title">Produk Terlaris</div><div class="sec-sub">Berdasarkan jumlah order</div></div>
+            </div>
+            <div id="topProductChart"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🧾 Pesanan Terbaru</div>
+          <div id="recentOrdersList"></div>
+        </div>
+      </div>
+
+      <!-- ── PRODUK TERLARIS ── -->
+      <div class="page" id="pageBestseller">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+          <div>
+            <div class="card">
+              <div class="card-title">🔥 Kelola Produk Terlaris</div>
+              <div style="font-size:12px;color:var(--text2);margin-bottom:16px;">Produk ini tampil di bagian atas homepage. Seret untuk urutkan.</div>
+              <div id="bsList"></div>
+              <button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="openAddBsModal()">+ Tambah Produk Terlaris</button>
+            </div>
+          </div>
+          <div>
+            <div class="card">
+              <div class="card-title">📋 Preview Urutan</div>
+              <div style="font-size:12px;color:var(--text2);margin-bottom:16px;">Tampilan di website customer.</div>
+              <div id="bsPreview"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── BANNER & PROMO ── -->
+      <div class="page" id="pageBanner">
+        <div class="card">
+          <div class="card-title" style="justify-content:space-between;">
+            <span>🖼️ Banner Aktif</span>
+            <button class="btn btn-primary btn-sm" onclick="openBannerModal()">+ Tambah Banner</button>
+          </div>
+          <div id="bannerList"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🎯 Promo Aktif</div>
+          <div id="promoList"></div>
+          <button class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="openPromoModal()">+ Tambah Promo</button>
+        </div>
+      </div>
+
+      <!-- ── HARGA & MARKUP ── -->
+      <div class="page" id="pageMarkup">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+          <div>
+            <div class="card">
+              <div class="card-title">💹 Atur Global Markup</div>
+              <div class="markup-display" id="markupDisplay">9.24%</div>
+              <div class="markup-sub" id="markupSub">Contoh: Harga agen Rp 54.000 → Jual Rp 59.000</div>
+              <div class="divider"></div>
+              <div class="slider-wrap">
+                <input type="range" min="5" max="50" step="0.5" value="9.24" id="markupSlider" oninput="updateMarkup(this.value)">
+                <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-top:4px;">
+                  <span>5%</span><span>50%</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Atau input manual (%)</label>
+                <input type="number" class="form-input" id="markupInput" value="9.24" min="0" max="200" step="0.01" oninput="updateMarkup(this.value)">
+              </div>
+              <button class="btn btn-primary" style="width:100%;" onclick="applyMarkup()">✅ Terapkan ke Semua Produk</button>
+            </div>
+          </div>
+          <div>
+            <div class="card">
+              <div class="card-title">📋 Simulasi Harga</div>
+              <div style="font-size:12px;color:var(--text2);margin-bottom:16px;">Preview harga setelah markup diterapkan.</div>
+              <div id="markupSimulation"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── VOUCHER ── -->
+      <div class="page" id="pageVoucher">
+        <div class="card">
+          <div class="card-title" style="justify-content:space-between;">
+            <span>🎟️ Daftar Voucher</span>
+            <button class="btn btn-primary btn-sm" onclick="openVoucherModal()">+ Buat Voucher</button>
+          </div>
+          <div id="voucherList"></div>
+        </div>
+      </div>
+
+      <!-- ── REKAP PESANAN ── -->
+      <div class="page" id="pageOrders">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+          <div class="tab-bar">
+            <div class="tab active" onclick="filterOrders('semua',this)">Semua</div>
+            <div class="tab" onclick="filterOrders('baru',this)">Baru</div>
+            <div class="tab" onclick="filterOrders('proses',this)">Diproses</div>
+            <div class="tab" onclick="filterOrders('selesai',this)">Selesai</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="openAddOrderModal()">+ Input Pesanan</button>
+        </div>
+        <div id="ordersList"></div>
+      </div>
+
+      <!-- ── LAPORAN ── -->
+      <div class="page" id="pageLaporan">
+        <div class="tab-bar" style="margin-bottom:20px;">
+          <div class="tab active" onclick="filterLaporan('harian',this)">Harian</div>
+          <div class="tab" onclick="filterLaporan('bulanan',this)">Bulanan</div>
+        </div>
+
+        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
+          <div class="stat-card">
+            <div class="stat-icon">💰</div>
+            <div class="stat-label">Total Pendapatan</div>
+            <div class="stat-val" id="laporanRev">Rp 0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">💸</div>
+            <div class="stat-label">Total Pengeluaran</div>
+            <div class="stat-val" id="laporanExp">Rp 0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📈</div>
+            <div class="stat-label">Laba Bersih</div>
+            <div class="stat-val" id="laporanProfit" style="color:var(--green)">Rp 0</div>
+          </div>
+        </div>
+
+        <div class="chart-wrap">
+          <div class="sec-title" style="margin-bottom:16px;">📊 Grafik Pendapatan</div>
+          <div id="laporanChart"></div>
+        </div>
+
+        <div style="text-align:right;margin-top:8px;">
+          <button class="btn btn-success" onclick="exportExcel()">📥 Export ke Excel (.csv)</button>
+        </div>
+      </div>
+
+      <!-- ── PENGELUARAN ── -->
+      <div class="page" id="pagePengeluaran">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+          <div>
+            <div class="card">
+              <div class="card-title" style="justify-content:space-between;">
+                <span>💸 Catat Pengeluaran</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Kategori</label>
+                <select class="form-select" id="expCat">
+                  <option>Bahan Baku (HPP)</option>
+                  <option>Operasional</option>
+                  <option>Marketing</option>
+                  <option>Pengiriman</option>
+                  <option>Lain-lain</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Keterangan</label>
+                <input type="text" class="form-input" id="expDesc" placeholder="Misal: Beli stok Yoshinoya 10kg">
+              </div>
+              <div class="form-row">
+                <div class="form-group" style="margin:0">
+                  <label class="form-label">Jumlah (Rp)</label>
+                  <input type="number" class="form-input" id="expAmount" placeholder="150000">
+                </div>
+                <div class="form-group" style="margin:0">
+                  <label class="form-label">Tanggal</label>
+                  <input type="date" class="form-input" id="expDate">
+                </div>
+              </div>
+              <button class="btn btn-primary" style="width:100%;" onclick="addExpense()">+ Catat Pengeluaran</button>
+            </div>
+          </div>
+          <div>
+            <div class="card">
+              <div class="card-title">📊 Breakdown Pengeluaran</div>
+              <div id="expBreakdown"></div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:0;">
+          <div class="card-title">📋 Riwayat Pengeluaran</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Tanggal</th><th>Kategori</th><th>Keterangan</th><th>Jumlah</th><th></th></tr></thead>
+              <tbody id="expTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modalAddBs">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🔥 Tambah Produk Terlaris</div>
+      <button class="modal-close" onclick="closeModal('modalAddBs')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nama Produk</label>
+      <input type="text" class="form-input" id="bsNewName" placeholder="Beef Saikoro">
+    </div>
+    <div class="form-row">
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Ukuran/Varian</label>
+        <input type="text" class="form-input" id="bsNewVol" placeholder="500 gr">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Harga Jual (Rp)</label>
+        <input type="number" class="form-input" id="bsNewPrice" placeholder="88000">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Emoji</label>
+      <input type="text" class="form-input" id="bsNewEmoji" placeholder="🥩" maxlength="2">
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:4px;" onclick="addBsProduct()">Tambahkan →</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalVoucher">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🎟️ Buat Voucher Baru</div>
+      <button class="modal-close" onclick="closeModal('modalVoucher')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Kode Voucher</label>
+      <input type="text" class="form-input" id="vcCode" placeholder="FROZEN10" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
+    </div>
+    <div class="form-row">
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Tipe Diskon</label>
+        <select class="form-select" id="vcType">
+          <option value="persen">Persentase (%)</option>
+          <option value="nominal">Nominal (Rp)</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Nilai Diskon</label>
+        <input type="number" class="form-input" id="vcValue" placeholder="10">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Min. Belanja (Rp)</label>
+        <input type="number" class="form-input" id="vcMin" placeholder="100000">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Kuota Pemakaian</label>
+        <input type="number" class="form-input" id="vcQuota" placeholder="50">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Keterangan</label>
+      <input type="text" class="form-input" id="vcDesc" placeholder="Diskon spesial pelanggan baru">
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:4px;" onclick="addVoucher()">Simpan Voucher →</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalBanner">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🖼️ Tambah Banner</div>
+      <button class="modal-close" onclick="closeModal('modalBanner')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Judul Banner</label>
+      <input type="text" class="form-input" id="bnTitle" placeholder="Promo Lebaran 2025">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Sub-teks</label>
+      <input type="text" class="form-input" id="bnSub" placeholder="Diskon 15% untuk semua daging">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Emoji / Ikon</label>
+      <input type="text" class="form-input" id="bnEmoji" placeholder="🎉" maxlength="2">
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:4px;" onclick="addBanner()">Tambah Banner →</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalAddOrder">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🧾 Input Pesanan Manual</div>
+      <button class="modal-close" onclick="closeModal('modalAddOrder')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nama Pelanggan</label>
+      <input type="text" class="form-input" id="ordName" placeholder="Nama pelanggan">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Item Pesanan</label>
+      <textarea class="form-textarea" id="ordItems" placeholder="Beef Sirloin 1kg, Saikoro 500gr, ..."></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Total (Rp)</label>
+        <input type="number" class="form-input" id="ordTotal" placeholder="350000">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Status</label>
+        <select class="form-select" id="ordStatus">
+          <option value="baru">Baru</option>
+          <option value="proses">Diproses</option>
+          <option value="selesai">Selesai</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:4px;" onclick="addOrder()">Simpan Pesanan →</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STATE ─────────────────────────────────────────────────────
+const PASSWORD = 'enjoygrill2025';
+
+let state = JSON.parse(localStorage.getItem('eg_admin') || 'null') || {
+  markup: 9.24,
+  bestsellers: [
+    { id:'bs1', name:'Beef Slice Lemak Yoshinoya (AUS)', vol:'500 gr', price:65000, emoji:'🥩' },
+    { id:'bs2', name:'Beef Slice Lemak US Premium', vol:'500 gr', price:66000, emoji:'🥩' },
+    { id:'bs3', name:'Beef Saikoro', vol:'500 gr', price:80500, emoji:'🥩' },
+    { id:'bs4', name:'Beef Steak Sirloin Meltique', vol:'200 gr', price:41000, emoji:'🥩' },
+  ],
+  vouchers: [
+    { id:'v1', code:'FROZEN10', type:'persen', value:10, min:100000, quota:50, used:12, desc:'Diskon 10% pelanggan baru', active:true },
+    { id:'v2', code:'GRILLBOSS', type:'nominal', value:20000, min:200000, quota:30, used:5, desc:'Potongan Rp 20rb', active:true },
+  ],
+  banners: [
+    { id:'bn1', title:'🔥 Promo Daging Segar', sub:'Beef Saikoro & Sirloin diskon minggu ini!', emoji:'🥩', active:true },
+    { id:'bn2', title:'❄️ Frozen Food Terlengkap', sub:'Lebih dari 130 produk siap dikirim', emoji:'📦', active:true },
+  ],
+  orders: [
+    { id:'ORD-001', name:'Budi Santoso', items:'Beef Sirloin 1kg, Saikoro 500gr', total:218500, status:'selesai', date:'2025-05-30' },
+    { id:'ORD-002', name:'Siti Rahayu', items:'Yoshinoya 500gr ×2, Smoked Beef', total:183500, status:'selesai', date:'2025-05-31' },
+    { id:'ORD-003', name:'Ahmad Fauzi', items:'Beef Steak Sirloin Import 1kg', total:208000, status:'proses', date:'2025-06-01' },
+    { id:'ORD-004', name:'Dewi Lestari', items:'Nugget Premium, Dimsum 25pcs, Spring Roll', total:127000, status:'baru', date:'2025-06-02' },
+  ],
+  expenses: [
+    { id:'e1', cat:'Bahan Baku (HPP)', desc:'Stok Yoshinoya 20kg', amount:1080000, date:'2025-05-28' },
+    { id:'e2', cat:'Operasional', desc:'Listrik freezer', amount:250000, date:'2025-05-29' },
+    { id:'e3', cat:'Pengiriman', desc:'Ongkir ke pelanggan area Jaksel', amount:75000, date:'2025-05-31' },
+  ],
+};
+
+function saveState() { localStorage.setItem('eg_admin', JSON.stringify(state)); }
+function fRp(n) { return 'Rp ' + Number(n).toLocaleString('id-ID'); }
+function fDate(d) { return new Date(d).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}); }
+function uid() { return Math.random().toString(36).slice(2,8).toUpperCase(); }
+
+// ── LOGIN ─────────────────────────────────────────────────────
+function doLogin() {
+  const pw = document.getElementById('pwInput').value;
+  if (pw === PASSWORD) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    initAll();
+    setDate();
+  } else {
+    document.getElementById('loginErr').style.display = 'block';
+    document.getElementById('pwInput').value = '';
+    document.getElementById('pwInput').focus();
+  }
+}
+function doLogout() {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('pwInput').value = '';
+}
+function setDate() {
+  document.getElementById('topbarDate').textContent = new Date().toLocaleDateString('id-ID',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+}
+
+// ── NAV ──────────────────────────────────────────────────────
+const pageTitles = {
+  dashboard: ['Dashboard','Ringkasan bisnis hari ini'],
+  bestseller: ['Produk Terlaris','Kelola produk yang tampil di homepage'],
+  banner: ['Banner & Promo','Atur konten promosi di website'],
+  markup: ['Harga & Markup','Atur harga jual dan margin'],
+  voucher: ['Voucher','Kelola kode diskon untuk pelanggan'],
+  orders: ['Rekap Pesanan','Semua transaksi masuk'],
+  laporan: ['Laporan Keuangan','Analisis pendapatan & laba'],
+  pengeluaran: ['Pengeluaran','Catat HPP dan biaya operasional'],
+};
+function goPage(id, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page'+id.charAt(0).toUpperCase()+id.slice(1)).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  const t = pageTitles[id];
+  document.getElementById('topbarTitle').textContent = t[0];
+  document.getElementById('topbarSub').textContent = t[1];
+  renderPage(id);
+}
+function renderPage(id) {
+  if(id==='dashboard') renderDashboard();
+  if(id==='bestseller') renderBestseller();
+  if(id==='banner') renderBanners();
+  if(id==='markup') renderMarkup();
+  if(id==='voucher') renderVouchers();
+  if(id==='orders') renderOrders('semua');
+  if(id==='laporan') renderLaporan('harian');
+  if(id==='pengeluaran') renderPengeluaran();
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+function initAll() { renderDashboard(); }
+
+// ── DASHBOARD ────────────────────────────────────────────────
+function renderDashboard() {
+  const today = new Date().toISOString().slice(0,10);
+  const todayOrders = state.orders.filter(o=>o.date===today);
+  const dayRev = todayOrders.filter(o=>o.status==='selesai').reduce((s,o)=>s+o.total,0);
+  const monthRev = state.orders.filter(o=>o.status==='selesai').reduce((s,o)=>s+o.total,0);
+  const totalExp = state.expenses.reduce((s,e)=>s+e.amount,0);
+
+  document.getElementById('statRevDay').textContent = fRp(dayRev);
+  document.getElementById('statOrders').textContent = state.orders.length;
+  document.getElementById('statRevMonth').textContent = fRp(monthRev);
+  document.getElementById('statExpense').textContent = fRp(totalExp);
+  document.getElementById('statOrdersChange').textContent = `↑ ${todayOrders.length} pesanan hari ini`;
+
+  // Weekly chart (simulated)
+  const days = ['Sen','Sel','Rab','Kam','Jum','Sab','Min'];
+  const vals = [312000, 485000, 290000, 567000, 420000, 680000, monthRev];
+  const maxV = Math.max(...vals);
+  const wc = document.getElementById('weeklyChart');
+  wc.innerHTML = days.map((d,i)=>`
+    <div class="chart-bar-row">
+      <div class="chart-bar-label">${d}</div>
+      <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${vals[i]/maxV*100}%;background:${i===6?'var(--orange)':'var(--blue)'};"></div></div>
+      <div class="chart-bar-val" style="color:${i===6?'var(--orange)':'var(--text2)'}">${fRp(vals[i])}</div>
+    </div>`).join('');
+
+  // Top products chart
+  const topProds = [
+    {name:'Beef Slice Yoshinoya', cnt:24},
+    {name:'Beef Saikoro', cnt:19},
+    {name:'Beef Steak Sirloin', cnt:15},
+    {name:'Smoked Beef', cnt:12},
+    {name:'Dimsum', cnt:10},
+  ];
+  const maxC = Math.max(...topProds.map(p=>p.cnt));
+  document.getElementById('topProductChart').innerHTML = topProds.map(p=>`
+    <div class="chart-bar-row">
+      <div class="chart-bar-label" style="font-size:11px;">${p.name}</div>
+      <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${p.cnt/maxC*100}%;background:var(--orange);"></div></div>
+      <div class="chart-bar-val">${p.cnt}x</div>
+    </div>`).join('');
+
+  // Recent orders
+  const recent = [...state.orders].reverse().slice(0,4);
+  document.getElementById('recentOrdersList').innerHTML = recent.map(o=>`
+    <div class="order-card" style="margin-bottom:8px;">
+      <div class="order-card-top">
+        <div>
+          <div class="order-id">#${o.id}</div>
+          <div class="order-name">${o.name}</div>
+          <div class="order-items">${o.items}</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="order-total">${fRp(o.total)}</div>
+          <div style="margin-top:6px;">${statusBadge(o.status)}</div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ── BESTSELLER ───────────────────────────────────────────────
+function renderBestseller() {
+  const el = document.getElementById('bsList');
+  el.innerHTML = state.bestsellers.map((b,i)=>`
+    <div class="bs-item">
+      <span class="drag-handle">⠿</span>
+      <span class="bs-item-emoji">${b.emoji}</span>
+      <div class="bs-item-info">
+        <div class="bs-item-name">${b.name}</div>
+        <div class="bs-item-vol">${b.vol}</div>
+      </div>
+      <div class="bs-item-price">${fRp(b.price)}</div>
+      <button class="btn btn-danger btn-sm" onclick="removeBs('${b.id}')">✕</button>
+    </div>`).join('');
+
+  document.getElementById('bsPreview').innerHTML = state.bestsellers.map(b=>`
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;">
+      <span style="font-size:1.5rem;">${b.emoji}</span>
+      <div style="flex:1;"><div style="font-size:13px;font-weight:700;">${b.name}</div><div style="font-size:11px;color:var(--text2);">${b.vol}</div></div>
+      <div style="font-size:13px;font-weight:800;color:var(--orange);">${fRp(b.price)}</div>
+    </div>`).join('');
+}
+function openAddBsModal() { openModal('modalAddBs'); }
+function addBsProduct() {
+  const name = document.getElementById('bsNewName').value.trim();
+  const vol = document.getElementById('bsNewVol').value.trim();
+  const price = parseInt(document.getElementById('bsNewPrice').value)||0;
+  const emoji = document.getElementById('bsNewEmoji').value.trim()||'🥩';
+  if(!name||!vol||!price){showToast('⚠️ Isi semua field!'); return;}
+  state.bestsellers.push({id:'bs'+uid(), name, vol, price, emoji});
+  saveState(); closeModal('modalAddBs');
+  renderBestseller(); showToast('✅ Produk terlaris ditambahkan!');
+  document.getElementById('bsNewName').value='';
+  document.getElementById('bsNewVol').value='';
+  document.getElementById('bsNewPrice').value='';
+  document.getElementById('bsNewEmoji').value='';
+}
+function removeBs(id) {
+  state.bestsellers = state.bestsellers.filter(b=>b.id!==id);
+  saveState(); renderBestseller(); showToast('🗑️ Produk dihapus dari terlaris');
+}
+
+// ── BANNER ───────────────────────────────────────────────────
+function renderBanners() {
+  document.getElementById('bannerList').innerHTML = state.banners.map(b=>`
+    <div class="banner-card">
+      <div class="banner-preview">${b.emoji}</div>
+      <div class="banner-info">
+        <div class="banner-title-text">${b.title}</div>
+        <div class="banner-sub-text">${b.sub}</div>
+      </div>
+      <span class="badge ${b.active?'badge-green':'badge-red'}">${b.active?'Aktif':'Nonaktif'}</span>
+      <button class="btn btn-ghost btn-sm" onclick="toggleBanner('${b.id}')">${b.active?'Nonaktifkan':'Aktifkan'}</button>
+      <button class="btn btn-danger btn-sm" onclick="removeBanner('${b.id}')">✕</button>
+    </div>`).join('');
+
+  document.getElementById('promoList').innerHTML = `
+    <div class="banner-card">
+      <div class="banner-preview" style="background:linear-gradient(135deg,var(--green),#15803d);">🏷️</div>
+      <div class="banner-info">
+        <div class="banner-title-text">Promo Weekend</div>
+        <div class="banner-sub-text">Gratis ongkir setiap Sabtu & Minggu</div>
+      </div>
+      <span class="badge badge-green">Aktif</span>
+      <button class="btn btn-ghost btn-sm">Edit</button>
+    </div>`;
+}
+function openBannerModal(){ openModal('modalBanner'); }
+function addBanner(){
+  const title=document.getElementById('bnTitle').value.trim();
+  const sub=document.getElementById('bnSub').value.trim();
+  const emoji=document.getElementById('bnEmoji').value.trim()||'📢';
+  if(!title){showToast('⚠️ Judul harus diisi!');return;}
+  state.banners.push({id:'bn'+uid(),title,sub,emoji,active:true});
+  saveState(); closeModal('modalBanner'); renderBanners();
+  showToast('✅ Banner ditambahkan!');
+}
+function toggleBanner(id){
+  const b=state.banners.find(x=>x.id===id);
+  if(b){ b.active=!b.active; saveState(); renderBanners(); showToast(`Banner ${b.active?'diaktifkan':'dinonaktifkan'}`); }
+}
+function removeBanner(id){
+  state.banners=state.banners.filter(b=>b.id!==id);
+  saveState(); renderBanners(); showToast('🗑️ Banner dihapus');
+}
+function openPromoModal(){ showToast('🚧 Fitur promo custom segera hadir!'); }
+
+// ── MARKUP ───────────────────────────────────────────────────
+const sampleAgentPrices = [
+  {name:'Beef Slice Yoshinoya',agen:54000},
+  {name:'Beef Saikoro 500gr',agen:73000},
+  {name:'Beef Steak Sirloin',agen:37000},
+  {name:'Beef Tenderloin',agen:185000},
+  {name:'Dimsum 25pcs',agen:65000},
+];
+function updateMarkup(val) {
+  val = parseFloat(val)||0;
+  state.markup = val;
+  document.getElementById('markupDisplay').textContent = val.toFixed(2)+'%';
+  document.getElementById('markupSlider').value = val;
+  document.getElementById('markupInput').value = val;
+  const ex = Math.round(54000*(1+val/100)/500)*500;
+  document.getElementById('markupSub').textContent = `Contoh: Yoshinoya agen Rp 54.000 → Jual ${fRp(ex)}`;
+  renderMarkupSim(val);
+}
+function renderMarkupSim(val) {
+  document.getElementById('markupSimulation').innerHTML = sampleAgentPrices.map(p=>{
+    const jual = Math.round(p.agen*(1+val/100)/500)*500;
+    const profit = jual - p.agen;
+    return `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+        <div>
+          <div style="font-size:12px;font-weight:700;">${p.name}</div>
+          <div style="font-size:11px;color:var(--text2);">Agen: ${fRp(p.agen)}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:13px;font-weight:800;color:var(--orange);">${fRp(jual)}</div>
+          <div style="font-size:11px;color:var(--green);">+${fRp(profit)}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+function renderMarkup() {
+  document.getElementById('markupDisplay').textContent = state.markup.toFixed(2)+'%';
+  document.getElementById('markupSlider').value = state.markup;
+  document.getElementById('markupInput').value = state.markup;
+  renderMarkupSim(state.markup);
+}
+function applyMarkup() {
+  saveState();
+  showToast('✅ Markup ' + state.markup.toFixed(2) + '% disimpan! Update harga di web utama manual ya.');
+}
+
+// ── VOUCHER ──────────────────────────────────────────────────
+function renderVouchers() {
+  document.getElementById('voucherList').innerHTML = state.vouchers.map(v=>`
+    <div class="voucher-card">
+      <div>
+        <div class="voucher-code">${v.code}</div>
+        <div class="voucher-desc">${v.desc}</div>
+      </div>
+      <div style="flex:1;text-align:center;">
+        <div class="voucher-val">${v.type==='persen'?v.value+'%':'Rp '+v.value.toLocaleString('id-ID')} OFF</div>
+        <div style="font-size:11px;color:var(--text2);">Min. ${fRp(v.min)}</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:12px;font-weight:700;">${v.used}/${v.quota}</div>
+        <div style="font-size:10px;color:var(--text2);">Terpakai</div>
+      </div>
+      <span class="badge ${v.active?'badge-green':'badge-red'}">${v.active?'Aktif':'Habis'}</span>
+      <button class="btn btn-danger btn-sm" onclick="removeVoucher('${v.id}')">✕</button>
+    </div>`).join('') || '<div style="text-align:center;padding:40px;color:var(--text2);">Belum ada voucher</div>';
+}
+function openVoucherModal(){ openModal('modalVoucher'); }
+function addVoucher(){
+  const code=document.getElementById('vcCode').value.trim();
+  const type=document.getElementById('vcType').value;
+  const value=parseFloat(document.getElementById('vcValue').value)||0;
+  const min=parseInt(document.getElementById('vcMin').value)||0;
+  const quota=parseInt(document.getElementById('vcQuota').value)||0;
+  const desc=document.getElementById('vcDesc').value.trim();
+  if(!code||!value){showToast('⚠️ Kode dan nilai harus diisi!');return;}
+  if(state.vouchers.find(v=>v.code===code)){showToast('⚠️ Kode sudah dipakai!');return;}
+  state.vouchers.push({id:'v'+uid(),code,type,value,min,quota,used:0,desc,active:true});
+  saveState(); closeModal('modalVoucher'); renderVouchers();
+  showToast('🎟️ Voucher '+code+' dibuat!');
+}
+function removeVoucher(id){
+  state.vouchers=state.vouchers.filter(v=>v.id!==id);
+  saveState(); renderVouchers(); showToast('🗑️ Voucher dihapus');
+}
+
+// ── ORDERS ───────────────────────────────────────────────────
+function statusBadge(s){
+  const map={baru:'badge-orange 🆕 Baru',proses:'badge-blue ⚙️ Diproses',selesai:'badge-green ✅ Selesai'};
+  const [cls,label]=(map[s]||'badge-red '+s).split(' ').reduce((a,c,i)=>i===0?[c,a[1]]:[a[0],a[1]+' '+c],['','']);
+  return `<span class="badge ${cls}">${label.trim()}</span>`;
+}
+function renderOrders(filter='semua'){
+  const orders = filter==='semua' ? state.orders : state.orders.filter(o=>o.status===filter);
+  const el = document.getElementById('ordersList');
+  if(!orders.length){el.innerHTML='<div style="text-align:center;padding:40px;color:var(--text2);">Tidak ada pesanan</div>';return;}
+  el.innerHTML = [...orders].reverse().map(o=>`
+    <div class="order-card">
+      <div class="order-card-top">
+        <div>
+          <div class="order-id">#${o.id} · ${fDate(o.date)}</div>
+          <div class="order-name" style="margin-top:4px;">${o.name}</div>
+          <div class="order-items">${o.items}</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="order-total">${fRp(o.total)}</div>
+          <div style="margin-top:6px;">${statusBadge(o.status)}</div>
+          <div style="margin-top:8px;display:flex;gap:4px;justify-content:flex-end;">
+            ${o.status!=='selesai'?`<button class="btn btn-success btn-sm" onclick="updateOrderStatus('${o.id}','selesai')">✅ Selesai</button>`:''}
+            ${o.status==='baru'?`<button class="btn btn-ghost btn-sm" onclick="updateOrderStatus('${o.id}','proses')">⚙️ Proses</button>`:''}
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+function updateOrderStatus(id,status){
+  const o=state.orders.find(x=>x.id===id);
+  if(o){o.status=status;saveState();renderOrders('semua');showToast('✅ Status pesanan diupdate!');}
+}
+function filterOrders(filter,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderOrders(filter);
+}
+function openAddOrderModal(){ openModal('modalAddOrder'); }
+function addOrder(){
+  const name=document.getElementById('ordName').value.trim();
+  const items=document.getElementById('ordItems').value.trim();
+  const total=parseInt(document.getElementById('ordTotal').value)||0;
+  const status=document.getElementById('ordStatus').value;
+  if(!name||!items||!total){showToast('⚠️ Isi semua field!');return;}
+  const id='ORD-'+uid();
+  const date=new Date().toISOString().slice(0,10);
+  state.orders.push({id,name,items,total,status,date});
+  saveState(); closeModal('modalAddOrder'); renderOrders('semua');
+  renderDashboard(); showToast('🧾 Pesanan '+id+' ditambahkan!');
+}
+
+// ── LAPORAN ──────────────────────────────────────────────────
+function renderLaporan(mode){
+  const rev = state.orders.filter(o=>o.status==='selesai').reduce((s,o)=>s+o.total,0);
+  const exp = state.expenses.reduce((s,e)=>s+e.amount,0);
+  const profit = rev - exp;
+  document.getElementById('laporanRev').textContent = fRp(rev);
+  document.getElementById('laporanExp').textContent = fRp(exp);
+  document.getElementById('laporanProfit').textContent = fRp(profit);
+  document.getElementById('laporanProfit').style.color = profit>=0?'var(--green)':'var(--red)';
+
+  const months=['Jan','Feb','Mar','Apr','Mei','Jun'];
+  const mVals=[1200000,980000,1540000,1890000,2100000,rev];
+  const maxM=Math.max(...mVals);
+  document.getElementById('laporanChart').innerHTML = months.map((m,i)=>`
+    <div class="chart-bar-row">
+      <div class="chart-bar-label">${m} 2025</div>
+      <div class="chart-bar-track"><div class="chart-bar-fill" style="width:${mVals[i]/maxM*100}%;background:${i===5?'var(--orange)':'var(--blue)'};"></div></div>
+      <div class="chart-bar-val" style="color:${i===5?'var(--orange)':'var(--text2)'}">${fRp(mVals[i])}</div>
+    </div>`).join('');
+}
+function filterLaporan(mode,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderLaporan(mode);
+}
+function exportExcel(){
+  const rows=[['ID','Nama','Items','Total','Status','Tanggal']];
+  state.orders.forEach(o=>rows.push([o.id,o.name,o.items,o.total,o.status,o.date]));
+  const csv=rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='laporan-enjoygrill-'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+  showToast('📥 File CSV berhasil diunduh!');
+}
+
+// ── PENGELUARAN ──────────────────────────────────────────────
+function renderPengeluaran(){
+  // Table
+  const tbody=document.getElementById('expTable');
+  tbody.innerHTML=[...state.expenses].reverse().map(e=>`
+    <tr>
+      <td class="mono">${fDate(e.date)}</td>
+      <td><span class="badge badge-yellow">${e.cat}</span></td>
+      <td>${e.desc}</td>
+      <td class="mono" style="color:var(--red);font-weight:700;">${fRp(e.amount)}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="removeExpense('${e.id}')">✕</button></td>
+    </tr>`).join('');
+
+  // Breakdown by category
+  const byCat={};
+  state.expenses.forEach(e=>{ byCat[e.cat]=(byCat[e.cat]||0)+e.amount; });
+  const total=Object.values(byCat).reduce((s,v)=>s+v,0)||1;
+  const colors=['var(--orange)','var(--blue)','var(--green)','var(--purple)','var(--yellow)'];
+  document.getElementById('expBreakdown').innerHTML = Object.entries(byCat).map(([cat,val],i)=>`
+    <div class="expense-cat">
+      <div class="expense-dot" style="background:${colors[i%colors.length]}"></div>
+      <div class="expense-cat-name">${cat}</div>
+      <div style="font-size:11px;color:var(--text2);margin-right:8px;">${(val/total*100).toFixed(0)}%</div>
+      <div class="expense-cat-val" style="color:${colors[i%colors.length]}">${fRp(val)}</div>
+    </div>`).join('') || '<div style="text-align:center;padding:20px;color:var(--text2);">Belum ada data</div>';
+
+  // Set today date
+  document.getElementById('expDate').value = new Date().toISOString().slice(0,10);
+}
+function addExpense(){
+  const cat=document.getElementById('expCat').value;
+  const desc=document.getElementById('expDesc').value.trim();
+  const amount=parseInt(document.getElementById('expAmount').value)||0;
+  const date=document.getElementById('expDate').value;
+  if(!desc||!amount){showToast('⚠️ Keterangan dan jumlah harus diisi!');return;}
+  state.expenses.push({id:'e'+uid(),cat,desc,amount,date});
+  saveState(); renderPengeluaran(); renderDashboard();
+  document.getElementById('expDesc').value='';
+  document.getElementById('expAmount').value='';
+  showToast('💸 Pengeluaran dicatat!');
+}
+function removeExpense(id){
+  state.expenses=state.expenses.filter(e=>e.id!==id);
+  saveState(); renderPengeluaran(); renderDashboard();
+  showToast('🗑️ Pengeluaran dihapus');
+}
+
+// ── MODAL ────────────────────────────────────────────────────
+function openModal(id){ document.getElementById(id).classList.add('show'); }
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+document.querySelectorAll('.modal-overlay').forEach(o=>{
+  o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('show'); });
+});
+
+// ── TOAST ────────────────────────────────────────────────────
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+</script>
+</body>
+</html>
