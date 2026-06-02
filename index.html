@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Enjoy Frozen Food — Bante Foodz</title>
+<title>Enjoy Frozen Food</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -227,6 +227,7 @@ textarea { min-height:80px; resize:vertical; }
 .voucher-status { margin-top:10px; display:none; }
 .voucher-status.success { display:flex; align-items:center; gap:8px; background:var(--green-bg); border:1.5px solid #A3D9B1; border-radius:12px; padding:10px 14px; font-size:13px; font-weight:700; color:var(--green); }
 .voucher-status.error { display:flex; align-items:center; gap:8px; background:var(--red-bg); border:1.5px solid #F5B8B0; border-radius:12px; padding:10px 14px; font-size:13px; font-weight:700; color:var(--red); }
+.voucher-status.info { display:flex; align-items:center; gap:8px; background:#FFF8F0; border:1.5px solid var(--border); border-radius:12px; padding:10px 14px; font-size:13px; font-weight:700; color:var(--text-muted); }
 .voucher-remove { margin-left:auto; cursor:pointer; font-size:16px; opacity:0.6; }
 .voucher-remove:hover { opacity:1; }
 .voucher-discount-row { display:flex; justify-content:space-between; align-items:center; font-size:13px; color:var(--green); font-weight:700; padding:6px 0; border-top:1px dashed #C8E8D4; margin-top:6px; }
@@ -320,7 +321,7 @@ textarea { min-height:80px; resize:vertical; }
     <div class="hero">
       <div class="hero-tag">❄️ EnjoyGrill Frozen Food</div>
       <h1>Belanja Bahan<br>Frozen Terlengkap</h1>
-      <p>Kualitas premium, harga bersaing. Langsung dari Bante Foodz Jakarta Selatan.</p>
+      <p>Kualitas premium, harga bersaing.</p>
       <div class="hero-badges">
         <div class="hero-badge">🥩 Meats</div>
         <div class="hero-badge">🍗 Chicken & Seafood</div>
@@ -977,25 +978,41 @@ function showPage(id) {
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
+// ─── GOOGLE SHEETS CONFIG ─────────────────────────────────────
+// Ganti dengan URL Apps Script Anda setelah deploy
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzzDD5FZebacbsJpezqn7f2Gc1ncaiZ40AL0gFTohaSjkK4Bd4f_omTRI4hvL34jzr7/exec';
+
 // ─── VOUCHER ─────────────────────────────────────────────────
-const VOUCHERS = [
-  { code:'FROZEN10', type:'persen', value:10, min:100000, quota:50, desc:'Diskon 10% pelanggan baru' },
-  { code:'GRILLBOSS', type:'nominal', value:20000, min:200000, quota:30, desc:'Potongan Rp 20.000' },
-];
-
 let appliedVoucher = null;
+let cachedVouchers = null; // cache agar tidak fetch berulang
 
-function applyVoucher() {
+async function loadVouchers() {
+  if (cachedVouchers) return cachedVouchers;
+  try {
+    const res = await fetch(`${APPS_SCRIPT_URL}?action=getVouchers`);
+    const data = await res.json();
+    cachedVouchers = data.vouchers || [];
+    return cachedVouchers;
+  } catch(e) {
+    return [];
+  }
+}
+
+async function applyVoucher() {
   const code = document.getElementById('voucherInput').value.trim().toUpperCase();
-  const statusEl = document.getElementById('voucherStatus');
   const total = getCartTotal();
 
   if (!code) { showVoucherStatus('error', '⚠️ Masukkan kode voucher terlebih dahulu.'); return; }
 
-  const voucher = VOUCHERS.find(v => v.code === code);
-  if (!voucher) { showVoucherStatus('error', '❌ Kode voucher tidak ditemukan.'); return; }
-  if (total < voucher.min) {
-    showVoucherStatus('error', `⚠️ Minimum belanja ${formatRp(voucher.min)} untuk pakai voucher ini.`);
+  showVoucherStatus('info', '⏳ Mengecek voucher...');
+
+  const vouchers = await loadVouchers();
+  const voucher  = vouchers.find(v => v.code === code && (v.active === true || v.active === 'TRUE'));
+
+  if (!voucher) { showVoucherStatus('error', '❌ Kode voucher tidak valid atau sudah tidak aktif.'); return; }
+  if (Number(voucher.used) >= Number(voucher.quota)) { showVoucherStatus('error', '❌ Kuota voucher sudah habis.'); return; }
+  if (total < Number(voucher.min)) {
+    showVoucherStatus('error', `⚠️ Minimum belanja ${formatRp(Number(voucher.min))} untuk pakai voucher ini.`);
     return;
   }
 
@@ -1086,6 +1103,40 @@ function sendOrder() {
 
   launchConfetti();
   showToast('🎉 Membuka WhatsApp...');
+
+  // ── Kirim pesanan ke Google Sheets ──
+  const itemsSummary = Object.entries(cart).map(([id, qty]) => {
+    const p = productMap[id];
+    return `${p.name} (${p.vol}) ×${qty}`;
+  }).join(', ');
+
+  const orderData = {
+    action:   'saveOrder',
+    name,
+    wa,
+    addr,
+    items:    itemsSummary,
+    subtotal: getCartTotal(),
+    voucher:  appliedVoucher ? appliedVoucher.code : '',
+    diskon:   getDiscount(),
+    total:    getFinalTotal(),
+    note
+  };
+
+  fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify(orderData)
+  }).then(() => {
+    // Update used voucher di Sheets
+    if (appliedVoucher) {
+      fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'useVoucher', code: appliedVoucher.code })
+      });
+      cachedVouchers = null; // reset cache
+    }
+  }).catch(() => {});
+
   setTimeout(() => {
     window.open('https://wa.me/6285771276910?text=' + encodeURIComponent(lines.join('\n')), '_blank');
   }, 800);
